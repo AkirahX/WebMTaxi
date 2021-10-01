@@ -1,58 +1,93 @@
+import React, { useReducer, useState } from 'react';
 import './App.css';
 
+const formReducer = (state, event) => {
+  if(event.reset) {
+    return {
+      number: '',
+      message: ''
+    }
+  }
+  return {
+    ...state,
+    [event.name]: event.value
+  }
+ }
+
+
+
 function App() {
-  const handleSubmit = event => {
-    event.preventDefault()
-    let message = `*Nome:* ${event.target.name.value}\n
-*Número:* wa.me/55${event.target.numc.value}\n
-*Destino:* ${event.target.dest.value}\n
-*Local:* ${event.target.loc.value}`
-    const res = fetch(
-      'http://192.95.46.251:3333/sendText',{
-        body: JSON.stringify({
-          sessionName: "senzap", 
-          number: '55' + event.target.num.value,
-          text: message
-        }),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        method: 'POST'
-      }
+  const [formData, setFormData] = useReducer(formReducer, {});
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async event => {
+    event.preventDefault();
+    setSubmitting(true);
+
+
+    const WppApi = await fetch(
+        'http://192.95.46.251:3333/sendText',{
+          body: JSON.stringify({
+            sessionName: "senzap", 
+            number: formData.number,
+            text: formData.message
+          }),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          method: 'POST'
+        }
     )
+    const result = await WppApi.json()
+    //console.log(result.result)
+    if(result.result === 'sucess'){
+        return(<div>Err</div>)
+    }
+
+
+    
+    setSubmitting(false);
+    setFormData({
+        reset: true
+    })
+
+
+  }
+  const handleChange = event => {
+    setFormData({
+      name: event.target.name,
+      number: event.target.number,
+      value: event.target.value,
+    });
   }
 
-  return (
+  return(
     <div className="wrapper">
-      <h1>Taxi</h1>
+      <h1>SendZap</h1>
+      {submitting &&
+       <div>
+         Enviando sua mensagem...<br/><br/>
+         
+         Número: {formData.number}<br/>
+         Messagem: {formData.message}
+       </div>
+      }
       <form onSubmit={handleSubmit}>
-        <fieldset>
+        <fieldset disabled={submitting}>
           <label>
-            <p>Número (APENAS EM TESTES)</p>
-            <input id="num" number="number"></input>
+            <p>Número</p>
+            <input name="number" onChange={handleChange} value={formData.number || ''}/>
           </label>
           <label>
-            <p>Nome:</p>
-            <input id="name"></input>
-          </label>
-          <label>
-            <p>Número:</p>
-            <input id="numc"></input>
-          </label>
-          <label>
-            <p>Destino:</p>
-            <input id="dest"></input>
-          </label>
-          <label>
-            <p>Onde está:</p>
-            <input id="loc"></input>
+            <p>Mensagem</p>
+            <input name="message" onChange={handleChange} value={formData.message || ''}/>
           </label>
         </fieldset>
-        <button type="submit">Enviar</button>
+        <button type="submit" disabled={submitting}>Enviar</button>
       </form>
     </div>
-  );
+  )
 }
 
 export default App;

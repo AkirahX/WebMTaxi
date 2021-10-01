@@ -2,5 +2,7 @@
   padding: 5px 20px;
 }
 .wrapper fieldset {
-  margin: 20px 0;
+  margin: 10px 0;
+  align-items: center;
+  text-align: center;
 }
